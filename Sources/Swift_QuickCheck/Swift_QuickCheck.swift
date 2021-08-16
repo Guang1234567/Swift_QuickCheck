@@ -107,6 +107,81 @@ public func check<A: Arbitrary & Smaller>(message: String, size: Int = 100, prop
     print("\"\(message)\" passed \(size) tests.")
 }
 
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B) -> Bool) -> () {
+    for _ in 0..<size {
+        let value0 = A.arbitrary()
+        let value1 = B.arbitrary()
+        if !prop(value0, value1) {
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1) }, initialValue: value0) {
+                $0.smaller()
+            }
+
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0) }, initialValue: value1) {
+                $0.smaller()
+            }
+
+            print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1))")
+            return
+        }
+    }
+    print("\"\(message)\" passed \(size) tests.")
+}
+
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B, C) -> Bool) -> () {
+    for _ in 0..<size {
+        let value0 = A.arbitrary()
+        let value1 = B.arbitrary()
+        let value2 = C.arbitrary()
+        if !prop(value0, value1, value2) {
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2) }, initialValue: value0) {
+                $0.smaller()
+            }
+
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2) }, initialValue: value1) {
+                $0.smaller()
+            }
+
+            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0) }, initialValue: value2) {
+                $0.smaller()
+            }
+
+            print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1), \(smallerValue2))")
+            return
+        }
+    }
+    print("\"\(message)\" passed \(size) tests.")
+}
+
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller, D: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B, C, D) -> Bool) -> () {
+    for _ in 0..<size {
+        let value0 = A.arbitrary()
+        let value1 = B.arbitrary()
+        let value2 = C.arbitrary()
+        let value3 = D.arbitrary()
+        if !prop(value0, value1, value2, value3) {
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2, value3) }, initialValue: value0) {
+                $0.smaller()
+            }
+
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2, value3) }, initialValue: value1) {
+                $0.smaller()
+            }
+
+            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0, value3) }, initialValue: value2) {
+                $0.smaller()
+            }
+
+            let smallerValue3 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, smallerValue2, $0) }, initialValue: value3) {
+                $0.smaller()
+            }
+
+            print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1), \(smallerValue2), \(smallerValue3))")
+            return
+        }
+    }
+    print("\"\(message)\" passed \(size) tests.")
+}
+
 /*
 /// 不要像下面这样子做, 因为做法已经过时.
 /// https://blog.csdn.net/balternotz/article/details/62897481
@@ -123,30 +198,5 @@ public func check<A: Arbitrary>(message: String, size: Int = 100, prop: ([A]) ->
     }
     print("\"\(message)\" passed \(size) tests.")
 }
-
-/// 用来测试
-///
-///     $ swift run --repl
-///       1> import Swift_QuickCheck
-///       2> check(message: "qsort should behave like sort") { (x: Array<Int>) in
-///       3.     return qsort(x) == x.sorted(by: <)
-///       4. }
-///     "qsort should behave like sort" passed 100 tests.
-///
-public func qsort(_ array: [Int]) -> [Int] {
-    if array.isEmpty {
-        return []
-    }
-    var arr = array
-    let pivot = arr.removeFirst()
-    let lesser = arr.filter {
-        $0 < pivot
-    }
-    let greater = arr.filter {
-        $0 >= pivot
-    }
-    return qsort(lesser) + [pivot] + qsort(greater)
-}
 */
-
 
