@@ -1,7 +1,7 @@
 import Foundation
 
 func tabulate<A>(times: Int, f: (Int) -> A) -> [A] {
-    return Array(0..<times).map(f)
+    Array(0..<times).map(f)
 }
 
 func iterateWhile<A>(condition: (A) -> Bool, initialValue: A,
@@ -35,13 +35,13 @@ public protocol Arbitrary {
 
 extension Int: Arbitrary {
     public static func arbitrary() -> Int {
-        return Int.random(in: Int.min...Int.max)
+        Int.random(in: Int.min...Int.max)
     }
 }
 
 extension Int: Smaller {
     public func smaller() -> Int? {
-        return self == 0 ? nil : self / 2
+        self == 0 ? nil : self / 2
     }
 }
 
@@ -54,7 +54,9 @@ extension Character: Arbitrary {
 }
 
 extension Character: Smaller {
-    public func smaller() -> Character? { return nil }
+    public func smaller() -> Character? {
+        nil
+    }
 }
 
 extension String: Arbitrary {
@@ -72,7 +74,7 @@ extension String: Arbitrary {
 
 extension String: Smaller {
     public func smaller() -> String? {
-        return self.isEmpty ? nil : String(self.dropFirst())
+        self.isEmpty ? nil : String(self.dropFirst())
     }
 }
 
@@ -80,17 +82,14 @@ extension Array: Arbitrary where Element: Arbitrary {
     public static func arbitrary() -> [Element] {
         let randomLength = Int.random(in: 0...50)
         return tabulate(times: randomLength) { _ in
-            return Element.arbitrary()
+            Element.arbitrary()
         }
     }
 }
 
 extension Array: Smaller where Element: Arbitrary {
     public func smaller() -> [Element]? {
-        if !self.isEmpty {
-            return Array(self.dropFirst())
-        }
-        return nil
+        self.isEmpty ? nil : Array(self.dropFirst())
     }
 }
 
