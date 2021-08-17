@@ -1,6 +1,6 @@
 import Foundation
 
-func tabulate<A>(times: Int, f: (Int) -> A) -> [A] {
+public func tabulate<A>(times: Int, f: (Int) -> A) -> [A] {
     Array(0..<times).map(f)
 }
 
@@ -25,10 +25,12 @@ extension Character {
     }
 }
 
+/// make the scope of failure case smaller.
 public protocol Smaller {
     func smaller() -> Self?
 }
 
+/// generate arbitrary instance for specific type.
 public protocol Arbitrary {
     static func arbitrary() -> Self
 }
@@ -93,13 +95,19 @@ extension Array: Smaller where Element: Arbitrary {
     }
 }
 
-public func check<A: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A) -> Bool) -> () {
+public func check<A: Arbitrary & Smaller>(
+        message: String,
+        size: Int = 100,
+        arbitrary: () -> A = A.arbitrary,
+        smaller: (A) -> A? = { a in
+            a.smaller()
+        },
+        prop: (A) -> Bool
+) -> () {
     for _ in 0..<size {
-        let value = A.arbitrary()
+        let value = arbitrary()
         if !prop(value) {
-            let smallerValue = iterateWhile(condition: { !prop($0) }, initialValue: value) {
-                $0.smaller()
-            }
+            let smallerValue = iterateWhile(condition: { !prop($0) }, initialValue: value, next: smaller)
             print("\"\(message)\" doesn't hold: \(smallerValue)")
             return
         }
@@ -107,19 +115,25 @@ public func check<A: Arbitrary & Smaller>(message: String, size: Int = 100, prop
     print("\"\(message)\" passed \(size) tests.")
 }
 
-public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B) -> Bool) -> () {
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller>(
+        message: String,
+        size: Int = 100,
+        arbitraryA: () -> A = A.arbitrary,
+        smallerA: (A) -> A? = { a in
+            a.smaller()
+        },
+        arbitraryB: () -> B = B.arbitrary,
+        smallerB: (B) -> B? = { b in
+            b.smaller()
+        },
+        prop: (A, B) -> Bool
+) -> () {
     for _ in 0..<size {
-        let value0 = A.arbitrary()
-        let value1 = B.arbitrary()
+        let value0 = arbitraryA()
+        let value1 = arbitraryB()
         if !prop(value0, value1) {
-            let smallerValue0 = iterateWhile(condition: { !prop($0, value1) }, initialValue: value0) {
-                $0.smaller()
-            }
-
-            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0) }, initialValue: value1) {
-                $0.smaller()
-            }
-
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1) }, initialValue: value0, next: smallerA)
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0) }, initialValue: value1, next: smallerB)
             print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1))")
             return
         }
@@ -127,24 +141,31 @@ public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller>(message: Strin
     print("\"\(message)\" passed \(size) tests.")
 }
 
-public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B, C) -> Bool) -> () {
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller>(
+        message: String,
+        size: Int = 100,
+        arbitraryA: () -> A = A.arbitrary,
+        smallerA: (A) -> A? = { a in
+            a.smaller()
+        },
+        arbitraryB: () -> B = B.arbitrary,
+        smallerB: (B) -> B? = { b in
+            b.smaller()
+        },
+        arbitraryC: () -> C = C.arbitrary,
+        smallerC: (C) -> C? = { c in
+            c.smaller()
+        },
+        prop: (A, B, C) -> Bool
+) -> () {
     for _ in 0..<size {
-        let value0 = A.arbitrary()
-        let value1 = B.arbitrary()
-        let value2 = C.arbitrary()
+        let value0 = arbitraryA()
+        let value1 = arbitraryB()
+        let value2 = arbitraryC()
         if !prop(value0, value1, value2) {
-            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2) }, initialValue: value0) {
-                $0.smaller()
-            }
-
-            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2) }, initialValue: value1) {
-                $0.smaller()
-            }
-
-            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0) }, initialValue: value2) {
-                $0.smaller()
-            }
-
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2) }, initialValue: value0, next: smallerA)
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2) }, initialValue: value1, next: smallerB)
+            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0) }, initialValue: value2, next: smallerC)
             print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1), \(smallerValue2))")
             return
         }
@@ -152,29 +173,37 @@ public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary &
     print("\"\(message)\" passed \(size) tests.")
 }
 
-public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller, D: Arbitrary & Smaller>(message: String, size: Int = 100, prop: (A, B, C, D) -> Bool) -> () {
+public func check<A: Arbitrary & Smaller, B: Arbitrary & Smaller, C: Arbitrary & Smaller, D: Arbitrary & Smaller>(
+        message: String,
+        size: Int = 100,
+        arbitraryA: () -> A = A.arbitrary,
+        smallerA: (A) -> A? = { a in
+            a.smaller()
+        },
+        arbitraryB: () -> B = B.arbitrary,
+        smallerB: (B) -> B? = { b in
+            b.smaller()
+        },
+        arbitraryC: () -> C = C.arbitrary,
+        smallerC: (C) -> C? = { c in
+            c.smaller()
+        },
+        arbitraryD: () -> D = D.arbitrary,
+        smallerD: (D) -> D? = { d in
+            d.smaller()
+        },
+        prop: (A, B, C, D) -> Bool
+) -> () {
     for _ in 0..<size {
-        let value0 = A.arbitrary()
-        let value1 = B.arbitrary()
-        let value2 = C.arbitrary()
-        let value3 = D.arbitrary()
+        let value0 = arbitraryA()
+        let value1 = arbitraryB()
+        let value2 = arbitraryC()
+        let value3 = arbitraryD()
         if !prop(value0, value1, value2, value3) {
-            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2, value3) }, initialValue: value0) {
-                $0.smaller()
-            }
-
-            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2, value3) }, initialValue: value1) {
-                $0.smaller()
-            }
-
-            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0, value3) }, initialValue: value2) {
-                $0.smaller()
-            }
-
-            let smallerValue3 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, smallerValue2, $0) }, initialValue: value3) {
-                $0.smaller()
-            }
-
+            let smallerValue0 = iterateWhile(condition: { !prop($0, value1, value2, value3) }, initialValue: value0, next: smallerA)
+            let smallerValue1 = iterateWhile(condition: { !prop(smallerValue0, $0, value2, value3) }, initialValue: value1, next: smallerB)
+            let smallerValue2 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, $0, value3) }, initialValue: value2, next: smallerC)
+            let smallerValue3 = iterateWhile(condition: { !prop(smallerValue0, smallerValue1, smallerValue2, $0) }, initialValue: value3, next: smallerD)
             print("\"\(message)\" doesn't hold: (\(smallerValue0), \(smallerValue1), \(smallerValue2), \(smallerValue3))")
             return
         }

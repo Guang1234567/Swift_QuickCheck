@@ -33,27 +33,36 @@ check(message: "qsort should behave like sort") { (x: [Int]) in
     qsort(x) == x.sorted(by: <)
 }
 
+// overwrite Arbitrary rule
+extension Int: Arbitrary {
+    public static func arbitrary() -> Int {
+        Int.random(in: -100...100)
+    }
+}
+
+// overwrite Arbitrary rule
+// @note:
+//  ```
+//  extension Array: Arbitrary where Element: Arbitrary { ... }
+//  ```
+// not working!
+//
+extension Array: Arbitrary where Element == Int {
+    public static func arbitrary() -> [Element] {
+        let randomLength = Int.random(in: 0...50)
+        return tabulate(times: randomLength) { _ in
+            Element.arbitrary()
+        }
+    }
+}
+
 check(message: "appendArray should behave like Array.append") { (x: Int, y: [Int]) in
     appendArray(x, y).elementsEqual(y + [x])
 }
 
-check(message: "appendArray should behave like Array.append") { (x: Int, y: [Int]) in
+check(message: "appendArray should behave like Array.append",
+        arbitraryA: Int.arbitrary,
+        arbitraryB: Array.arbitrary
+) { (x: Int, y: [Int]) in
     appendArray(x, y).elementsEqual([x] + y)
-}
-
-
-func curry<A, B>(_ f: @escaping (A) -> B) -> (A) -> () -> B {
-    { (a: A) -> () -> B in
-        { () -> B in
-            f(a)
-        }
-    }
-}
-
-func curry<A, B, C>(_ f: @escaping (A, B) -> C) -> (A) -> (B) -> C {
-    { a in
-        { b in
-            f(a, b)
-        }
-    }
 }
