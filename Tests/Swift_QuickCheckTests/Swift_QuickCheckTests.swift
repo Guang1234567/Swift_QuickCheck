@@ -9,7 +9,7 @@ final class Swift_QuickCheckTests: XCTestCase {
         XCTAssertEqual("Hello, World!", "Hello, World!")
     }
 
-    static var allTests = [
+    static var allTests: [(String, (Swift_QuickCheckTests) -> () throws -> Void)] = [
         ("testExample", testExample),
     ]
 }
